@@ -6,8 +6,7 @@ class homebrew (
   $group                      = 'admin',
   $multiuser                  = false,
 ) {
-
-  if $::operatingsystem != 'Darwin' {
+  if $facts['os']['name'] != 'Darwin' {
     fail('This Module works on Mac OSX only!')
   }
 
@@ -15,19 +14,27 @@ class homebrew (
     fail('Homebrew does not support installation as the "root" user.')
   }
 
-  class { '::homebrew::compiler': }
-  -> class { '::homebrew::install': }
+  class { 'homebrew::compiler': }
+  -> class { 'homebrew::install': }
 
-  contain '::homebrew::compiler'
-  contain '::homebrew::install'
+  contain 'homebrew::compiler'
+
+  if !$facts['has_arm64'] {
+    Class['homebrew::compiler']
+    -> class { 'homebrew::install': }
+    contain 'homebrew::install'
+  } else {
+    Class['homebrew::compiler']
+    -> class { 'homebrew::installarm': }
+    contain 'homebrew::installarm'
+  }
 
   if $homebrew::github_token {
-    file { '/etc/environment': ensure => present }
+    file { '/etc/environment': ensure => file }
     -> file_line { 'homebrew-github-api-token':
       path  => '/etc/environment',
       line  => "HOMEBREW_GITHUB_API_TOKEN=${homebrew::github_token}",
       match => '^HOMEBREW_GITHUB_API_TOKEN',
     }
   }
-
 }
