@@ -12,7 +12,14 @@ Puppet::Type.type(:package).provide(:homebrew, :parent => Puppet::Provider::Pack
 
   has_feature :install_options
 
-  commands :brew => ENV.fetch('PUPPET_HOMEBREW_COMMAND', 'brew')
+  if (File.exist?('/usr/local/bin/brew')) then
+    @brewbin = '/usr/local/bin/brew'
+    true
+  elsif (File.exist?('/opt/homebrew/bin/brew')) then
+    @brewbin = '/opt/homebrew/bin/brew'
+  end
+
+  commands :brew => @brewbin
   commands :stat => '/usr/bin/stat'
 
   def self.execute(cmd, failonfail = false, combine = false)
