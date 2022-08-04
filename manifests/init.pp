@@ -15,7 +15,6 @@ class homebrew (
   }
 
   class { 'homebrew::compiler': }
-  -> class { 'homebrew::install': }
 
   contain 'homebrew::compiler'
 
