@@ -23,12 +23,12 @@ Puppet::Type.type(:package).provide(:homebrew, :parent => Puppet::Provider::Pack
   commands :stat => '/usr/bin/stat'
 
   def self.execute(cmd, failonfail = false, combine = false)
-    brew_cmd = command(:brew)
-    owner = stat('-nf', '%Uu', brew_cmd).to_i
-    group = stat('-nf', '%Ug', brew_cmd).to_i
+    owner = stat('-nf', '%Uu', "#{@brewbin}").to_i
+    group = stat('-nf', '%Ug', "#{@brewbin}").to_i
     home  = Etc.getpwuid(owner).dir
-
+    
     if owner == 0
+      brew_cmd = command(:brew)
       raise Puppet::ExecutionFailure, "Homebrew does not support installations owned by the \"root\" user. Please check the permissions of #{brew_cmd}"
     end
 
