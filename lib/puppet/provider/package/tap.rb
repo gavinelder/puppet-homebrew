@@ -40,17 +40,15 @@ Puppet::Type.type(:package).provide(:tap, :parent => Puppet::Provider::Package) 
       gid = nil
     end
 
-    custom_env = {'HOME' => home}
-    custom_env['HOMEBREW_CHANGE_ARCH_TO_ARM'] = '1' if Facter.value(:has_arm64)
 
     if Puppet.features.bundled_environment?
       Bundler.with_clean_env do
         super(cmd, :uid => uid, :gid => gid, :combine => combine,
-              :custom_environment => custom_env, :failonfail => failonfail)
+              :custom_environment => {'HOME' => home}, :failonfail => failonfail)
       end
     else
       super(cmd, :uid => uid, :gid => gid, :combine => combine,
-            :custom_environment => custom_env, :failonfail => failonfail)
+            :custom_environment => {'HOME' => home}, :failonfail => failonfail)
     end
   end
 
