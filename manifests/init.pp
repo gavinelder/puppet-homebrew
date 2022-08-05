@@ -13,12 +13,12 @@
 # @param multiuser
 #
 class homebrew (
-  String $user,
-  String $command_line_tools_package = undef,
-  String $command_line_tools_source  = undef,
-  String $github_token               = undef,
-  String $group                      = 'admin',
-  Boolean $multiuser                 = false,
+  $user,
+  $command_line_tools_package = undef,
+  $command_line_tools_source  = undef,
+  $github_token               = undef,
+  $group                      = 'admin',
+  $multiuser                 = false,
 ) {
   if $facts['os']['name'] != 'Darwin' {
     fail('This Module works on Mac OSX only!')
