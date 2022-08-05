@@ -18,7 +18,7 @@ class homebrew (
   String $command_line_tools_source  = undef,
   String $github_token               = undef,
   String $group                      = 'admin',
-  Bool $multiuser                  = false,
+  Boolean $multiuser                 = false,
 ) {
   if $facts['os']['name'] != 'Darwin' {
     fail('This Module works on Mac OSX only!')
