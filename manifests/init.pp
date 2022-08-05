@@ -1,10 +1,24 @@
+#
+#
+# @param user
+#
+# @param command_line_tools_package
+#
+# @param command_line_tools_source
+#
+# @param github_token
+#
+# @param group
+#
+# @param multiuser
+#
 class homebrew (
-  $user,
-  $command_line_tools_package = undef,
-  $command_line_tools_source  = undef,
-  $github_token               = undef,
-  $group                      = 'admin',
-  $multiuser                  = false,
+  String $user,
+  String $command_line_tools_package = undef,
+  String $command_line_tools_source  = undef,
+  String $github_token               = undef,
+  String $group                      = 'admin',
+  Bool $multiuser                  = false,
 ) {
   if $facts['os']['name'] != 'Darwin' {
     fail('This Module works on Mac OSX only!')
@@ -15,18 +29,10 @@ class homebrew (
   }
 
   class { 'homebrew::compiler': }
+  -> class { 'homebrew::install': }
 
   contain 'homebrew::compiler'
-
-  if !$facts['has_arm64'] {
-    Class['homebrew::compiler']
-    -> class { 'homebrew::install': }
-    contain 'homebrew::install'
-  } else {
-    Class['homebrew::compiler']
-    -> class { 'homebrew::installarm': }
-    contain 'homebrew::installarm'
-  }
+  contain 'homebrew::install'
 
   if $homebrew::github_token {
     file { '/etc/environment': ensure => file }
