@@ -1,7 +1,7 @@
-require 'puppet/provider/package'
+require "puppet/provider/package"
 
 Puppet::Type.type(:package).provide(:brew, :parent => Puppet::Provider::Package) do
-  desc 'Package management using HomeBrew on OSX'
+  desc "Package management using HomeBrew on OSX"
 
   confine :operatingsystem => :darwin
 
@@ -12,23 +12,24 @@ Puppet::Type.type(:package).provide(:brew, :parent => Puppet::Provider::Package)
 
   has_feature :install_options
 
-  if (File.exist?('/usr/local/bin/brew')) then
-    @brewbin = '/usr/local/bin/brew'
+  if (Facter.value(:has_arm64) == false and File.exist?("/usr/local/bin/brew"))
+    @brewbin = "/usr/local/bin/brew"
     true
-  elsif (File.exist?('/opt/homebrew/bin/brew')) then
-    @brewbin = '/opt/homebrew/bin/brew'
+  elsif (Facter.value(:has_arm64) == true and File.exist?("/opt/homebrew/bin/brew"))
+    @brewbin = "/opt/homebrew/bin/brew"
   end
 
   commands :brew => @brewbin
-  commands :stat => '/usr/bin/stat'
+  commands :stat => "/usr/bin/stat"
 
   def self.execute(cmd, failonfail = false, combine = false)
-    owner = stat('-nf', '%Uu', "#{@brewbin}").to_i
-    group = stat('-nf', '%Ug', "#{@brewbin}").to_i
-    home  = Etc.getpwuid(owner).dir
+    owner = stat("-nf", "%Uu", "#{@brewbin}").to_i
+    group = stat("-nf", "%Ug", "#{@brewbin}").to_i
+    home = Etc.getpwuid(owner).dir
 
     if owner == 0
-      raise Puppet::ExecutionFailure, 'Homebrew does not support installations owned by the "root" user. Please check the permissions of /usr/local/bin/brew'
+      brew_cmd = command(:brew)
+      raise Puppet::ExecutionFailure, "Homebrew does not support installations owned by the \"root\" user. Please check the permissions of #{brew_cmd}"
     end
 
     # the uid and gid can only be set if running as root
@@ -40,14 +41,17 @@ Puppet::Type.type(:package).provide(:brew, :parent => Puppet::Provider::Package)
       gid = nil
     end
 
+    custom_env = { "HOME" => home }
+    custom_env["HOMEBREW_CHANGE_ARCH_TO_ARM"] = "1" if Facter.value(:has_arm64)
+
     if Puppet.features.bundled_environment?
       Bundler.with_clean_env do
         super(cmd, :uid => uid, :gid => gid, :combine => combine,
-              :custom_environment => { 'HOME' => home }, :failonfail => failonfail)
+                   :custom_environment => custom_env, :failonfail => failonfail)
       end
     else
       super(cmd, :uid => uid, :gid => gid, :combine => combine,
-            :custom_environment => { 'HOME' => home }, :failonfail => failonfail)
+                 :custom_environment => custom_env, :failonfail => failonfail)
     end
   end
 
@@ -145,12 +149,12 @@ Puppet::Type.type(:package).provide(:brew, :parent => Puppet::Provider::Package)
     end
   end
 
-  def self.package_list(options={})
+  def self.package_list(options = {})
     Puppet.debug "Listing installed packages"
 
-    cmd_line = [command(:brew), :list, '--versions']
+    cmd_line = [command(:brew), :list, "--versions"]
     if options[:justme]
-      cmd_line += [ options[:justme] ]
+      cmd_line += [options[:justme]]
     end
 
     begin
@@ -165,7 +169,7 @@ Puppet::Type.type(:package).provide(:brew, :parent => Puppet::Provider::Package)
     re_excludes = Regexp.union([
       /^==>.*/,
       /^Tapped \d+ formulae.*/,
-      ])
+    ])
     lines = cmd_output.lines.delete_if { |line| line.match(re_excludes) }
 
     if options[:justme]
@@ -181,16 +185,16 @@ Puppet::Type.type(:package).provide(:brew, :parent => Puppet::Provider::Package)
         return name_version_split(line)
       end
     else
-      return lines.map{ |line| name_version_split(line) }
+      return lines.map { |line| name_version_split(line) }
     end
   end
 
   def self.name_version_split(line)
     if line =~ (/^(\S+)\s+(.+)/)
       {
-        :name     => $1,
-        :ensure   => $2,
-        :provider => :brew
+        :name => $1,
+        :ensure => $2,
+        :provider => :brew,
       }
     else
       Puppet.warning "Could not match #{line}"
