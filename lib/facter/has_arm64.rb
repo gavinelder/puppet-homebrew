@@ -13,8 +13,8 @@
 #   None
 
 Facter.add(:has_arm64) do
-    confine :operatingsystem => 'Darwin'
-    setcode do
-      system('arch -arm64 true >/dev/null 2>&1')
-    end
+  confine :operatingsystem => "Darwin"
+  setcode do
+    system("arch -arm64 true >/dev/null 2>&1")
   end
+end

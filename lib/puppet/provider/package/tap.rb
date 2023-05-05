@@ -1,7 +1,7 @@
-require 'puppet/provider/package'
+require "puppet/provider/package"
 
 Puppet::Type.type(:package).provide(:tap, :parent => Puppet::Provider::Package) do
-  desc 'Tap management using HomeBrew on OSX'
+  desc "Tap management using HomeBrew on OSX"
 
   confine :operatingsystem => :darwin
 
@@ -9,22 +9,21 @@ Puppet::Type.type(:package).provide(:tap, :parent => Puppet::Provider::Package) 
   has_feature :uninstallable
 
   has_feature :install_options
-  
 
-  if (Facter.value(:has_arm64) == false and File.exist?('/usr/local/bin/brew')) then
-    @brewbin = '/usr/local/bin/brew'
+  if (Facter.value(:has_arm64) == false and File.exist?("/usr/local/bin/brew"))
+    @brewbin = "/usr/local/bin/brew"
     true
-  elsif (Facter.value(:has_arm64) == true and  File.exist?('/opt/homebrew/bin/brew')) then
-    @brewbin = '/opt/homebrew/bin/brew'
+  elsif (Facter.value(:has_arm64) == true and File.exist?("/opt/homebrew/bin/brew"))
+    @brewbin = "/opt/homebrew/bin/brew"
   end
 
   commands :brew => @brewbin
-  commands :stat => '/usr/bin/stat'
+  commands :stat => "/usr/bin/stat"
 
   def self.execute(cmd, failonfail = false, combine = false)
-    owner = stat('-nf', '%Uu', "#{@brewbin}").to_i
-    group = stat('-nf', '%Ug', "#{@brewbin}").to_i
-    home  = Etc.getpwuid(owner).dir
+    owner = stat("-nf", "%Uu", "#{@brewbin}").to_i
+    group = stat("-nf", "%Ug", "#{@brewbin}").to_i
+    home = Etc.getpwuid(owner).dir
 
     if owner == 0
       brew_cmd = command(:brew)
@@ -40,17 +39,17 @@ Puppet::Type.type(:package).provide(:tap, :parent => Puppet::Provider::Package) 
       gid = nil
     end
 
-    custom_env = {'HOME' => home}
-    custom_env['HOMEBREW_CHANGE_ARCH_TO_ARM'] = '1' if Facter.value(:has_arm64)
-    
+    custom_env = { "HOME" => home }
+    custom_env["HOMEBREW_CHANGE_ARCH_TO_ARM"] = "1" if Facter.value(:has_arm64)
+
     if Puppet.features.bundled_environment?
       Bundler.with_clean_env do
         super(cmd, :uid => uid, :gid => gid, :combine => combine,
-              :custom_environment => custom_env, :failonfail => failonfail)
+                   :custom_environment => custom_env, :failonfail => failonfail)
       end
     else
       super(cmd, :uid => uid, :gid => gid, :combine => combine,
-            :custom_environment => custom_env, :failonfail => failonfail)
+                 :custom_environment => custom_env, :failonfail => failonfail)
     end
   end
 
@@ -94,9 +93,9 @@ Puppet::Type.type(:package).provide(:tap, :parent => Puppet::Provider::Package) 
       output = execute([command(:brew), :tap])
       output.each_line do |line|
         line.chomp!
-        next unless [resource_name, resource_name.gsub('homebrew-', '')].include?(line.downcase)
+        next unless [resource_name, resource_name.gsub("homebrew-", "")].include?(line.downcase)
 
-        return { :name => line, :ensure => 'present', :provider => 'tap' }
+        return { :name => line, :ensure => "present", :provider => "tap" }
       end
     rescue Puppet::ExecutionFailure => detail
       Puppet.Err "Could not query tap: #{detail}"
@@ -115,7 +114,7 @@ Puppet::Type.type(:package).provide(:tap, :parent => Puppet::Provider::Package) 
         line.chomp!
         next if line.empty?
 
-        taps << new({ :name => line, :ensure => 'present', :provider => 'tap' })
+        taps << new({ :name => line, :ensure => "present", :provider => "tap" })
       end
       taps
     rescue Puppet::ExecutionFailure => detail
