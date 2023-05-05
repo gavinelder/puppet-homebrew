@@ -10,7 +10,10 @@ Facter.add(:brew_version) do
             elsif (Facter.value(:has_arm64) == true and  File.exist?('/opt/homebrew/bin/brew')) then
             @brewbin = '/opt/homebrew/bin/brew'
         end
-        brew_version = Facter::Util::Resolution.exec("#{@brewbin} --version | awk '/^Homebrew / {print $2}'")
+        
+        Facter::Util::Resolution.with_env("PATH" => '/opt/homebrew/bin:/opt/homebrew/sbin') do
+            brew_version = Facter::Util::Resolution.exec("/opt/homebrew/bin/brew --version | awk '/^Homebrew / {print $2}'")
+        end
     else
         brew_version = 'none'
     end
