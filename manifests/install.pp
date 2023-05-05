@@ -5,7 +5,7 @@ class homebrew::install {
     /^Apple*/: {
       $brew_root          = '/opt/homebrew'
       $brew_repository    = $brew_root
-      $brew_arm_path      = true
+      $brew_arm           = true
       $inst_dir           = $brew_root
       $link_bin           = false
       $brew_folders_extra = [
@@ -31,6 +31,7 @@ class homebrew::install {
       $brew_root          = '/usr/local'
       $inst_dir           = "${brew_root}/Homebrew"
       $link_bin           = true
+      $brew_arm           = false
       $brew_folders_extra = [
         "${brew_root}/Homebrew",
       ]
@@ -136,7 +137,7 @@ class homebrew::install {
       group  => $homebrew::group,
     }
   }
-  if $brew_arm_path {
+  if $brew_arm {
     file { '/etc/paths.d/homebrew':
       owner   => 'root',
       group   => 'wheel',
